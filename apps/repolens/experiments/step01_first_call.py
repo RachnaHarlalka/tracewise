@@ -23,3 +23,4 @@ print("Input Tokens:", response.prompt_eval_count)
 print("Output tokens:",response.eval_count)
 print(f"Duration in seconds: {seconds:.2f}")
 
+

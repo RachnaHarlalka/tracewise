@@ -21,10 +21,12 @@ The developer is an experienced full-stack engineer but NEW to LLM apps and AI o
 - Boilerplate I already know (Docker config, Tailwind styling, CRUD forms) may be generated
   if I ask. Core learning code (SDK, span model, ingestion, eval runner, graders) I write myself.
 - Keep explanations short. One step at a time. End by telling me how to verify the step works.
+- Answers must be precise and to the point: as short as possible, direct answer first.
+  No long explanations unless I ask for more detail ("explain more").
 
 ## Current status
 Phase: 1 — RepoLens test app
-Step: 2 — Chat loop with history
+Step: 3 — Download repo + chunking
 (Update this section at the end of every step.)
 
 ## Stack (free only — no paid services, no AWS)

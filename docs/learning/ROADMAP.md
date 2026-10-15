@@ -20,7 +20,7 @@ Done = you can answer the Learn questions without looking anything up.
 - **Try:** Call Ollama with curl, then run the same prompt 3 times.
 - **Build:** `first_call.py` printing the answer, input/output tokens, duration.
 
-### [ ] Step 2 — Chat loop with history
+### [X] Step 2 — Chat loop with history
 
 - **Learn:** Message roles (system, user, assistant). Why does the LLM have no
   memory, and how does sending the history fix that? What is a context window?
@@ -118,3 +118,19 @@ Done = you can answer the Learn questions without looking anything up.
 - Eugene Yan, "Patterns for Building LLM-based Systems & Products" (Phase 4)
 - Zheng et al. 2023, "Judging LLM-as-a-Judge" paper (Phase 4/5)
 - OpenTelemetry docs, concepts section (Phase 6)
+
+## Skills while building
+
+- Phase 1 (RepoLens): how LLM apps work. Prompts, tokens, embeddings, RAG, tool calling, and pgvector.
+
+- Phase 2 (Span recording): observability. Traces and spans, data modeling, building an SDK, background batching, queues, and workers.
+
+- Phase 3 (Dashboard): analytics. Rebuilding trees from flat rows, latency percentiles, and cost tracking.
+
+- Phase 4 (Evals): AI quality testing. Datasets, prompt versioning, code graders, LLM-as-judge, and background job pipelines.
+
+- Phase 5 (Trust and automation): measuring trust. Human labeling, agreement metrics (Cohen’s kappa), auto-instrumentation, and CI/CD quality gates.
+
+- Phase 6 (Optional): scale and standards. Column databases (ClickHouse), OpenTelemetry, and load testing.
+
+- Across all phases: system design, Docker, and explaining technical trade-offs, which is what interviews test.
