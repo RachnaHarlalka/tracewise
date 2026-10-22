@@ -1,3 +1,8 @@
+# STEP 1: first LLM call
+# - Ollama = local HTTP server; the script is just a client. App must be running.
+# - Tokens: input = prompt_eval_count, output = eval_count. Durations are in ns (/1e9).
+# - Temperature 0 = same answer every time (use for evals). Consistent != correct.
+
 from ollama import chat
 from ollama import ChatResponse
 

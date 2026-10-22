@@ -7,5 +7,6 @@ Don't copy: read the "why" comments and ask what each choice protects against.
 |---|---|
 | step1_first_call.py | 1: first LLM call |
 | step2_chat_loop.py | 2: chat loop with history |
+| step3_ingest_and_chunk.py | 3: repo download, filter, line chunking |
 
 Run from the repo root: `python docs/learning/reference/step1_first_call.py`

@@ -1,3 +1,8 @@
+# STEP 2: chat loop with history
+# - Model is stateless: "memory" = we resend the whole `messages` list each turn.
+# - Append to history only AFTER the call succeeds. Input tokens grow every turn.
+# - Bug I hit: my own `chat()` shadowed `ollama.chat` -> infinite recursion.
+
 from ollama import ChatResponse
 from ollama import chat
 

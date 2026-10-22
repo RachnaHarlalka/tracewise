@@ -1,5 +1,7 @@
-
-
+# STEP 3: chunking by hand
+# - RAG = retrieve pieces -> add to prompt -> generate. Chunks make retrieval possible.
+# - Small chunks: precise but cut ideas. Big chunks: whole ideas but noisy. Overlap fixes cuts.
+# - File path is relative to where you RUN the script, not to this file.
 
 def main():
   try:

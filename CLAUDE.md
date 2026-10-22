@@ -26,7 +26,7 @@ The developer is an experienced full-stack engineer but NEW to LLM apps and AI o
 
 ## Current status
 Phase: 1 — RepoLens test app
-Step: 3 — Download repo + chunking
+Step: 4 — Embeddings + similarity search
 (Update this section at the end of every step.)
 
 ## Stack (free only — no paid services, no AWS)

@@ -27,7 +27,7 @@ Done = you can answer the Learn questions without looking anything up.
 - **Try:** Ask "my name is X", then "what's my name?" with and without history.
 - **Build:** Terminal chat loop that keeps history and has a system prompt.
 
-### [ ] Step 3 — Download repo + chunking
+### [X] Step 3 — Download repo + chunking
 
 - **Learn:** What is RAG and why does it exist? Why split documents into chunks?
   Trade-offs of small vs large chunks. Why overlap chunks?
