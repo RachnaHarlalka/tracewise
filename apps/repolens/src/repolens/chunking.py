@@ -7,7 +7,7 @@ class Chunk:
   end_line:int
   content:str
   path:str
-
+  embedding:list[float] | None = None
 
 
 def chunk_file(lines:list[str],path:str, chunk_size: int=4, overlap:int = 2)-> list[Chunk]:

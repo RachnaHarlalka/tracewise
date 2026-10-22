@@ -6,6 +6,8 @@ import zipfile
 import httpx
 from repolens.chunking import Chunk, chunk_file
 from repolens.config import CHUNK_OVERLAP, CHUNK_SIZE, CONSIDERED_FILE_FORMATS, SKIP_DIRS, SKIP_FILES, SKIP_SUFFIXES
+from repolens.embeddings import embed_data
+from repolens.retrieval import search
 zip_url ='https://github.com/RachnaHarlalka/tracewise/archive/refs/heads/main.zip'
 
 def should_keep(path:str)->bool:
@@ -36,6 +38,16 @@ def ingest(url) -> list[Chunk]:
   return all_chunks
 
 
+
+
 if __name__ == "__main__":
   chunks = ingest(zip_url)
-  print("length of chunks",len(chunks))
+  embeddings = embed_data([chunk.content for chunk in chunks])
+  for index, embedding in enumerate(embeddings):
+    chunks[index].embedding = embedding
+  # print("hello", chunks[0])
+  question = "What is Tracewise"
+  search(question, chunks)
+  # print("chunkll",chunk.content)
+
+

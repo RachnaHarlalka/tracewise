@@ -1,13 +1,24 @@
 from repolens.chat import chat_turn
+from repolens.config import SYSTEM_PROMPT_TEXT
+from repolens.embeddings import embed_data
+from repolens.ingest import ingest
 
 
 def main()-> None:
   messages=[
     {
       'role':"system",
-      'content':"Give all ans in short"
+      'content':SYSTEM_PROMPT_TEXT
     }
   ]
+  try:
+    repor_url = input("give the repo url feom which you want an ans : ")
+  except Exception as err:
+    print ("Not a valid url")
+  chunks = ingest(repor_url)
+  embeddings = embed_data([chunk.content for chunk in chunks])
+  for index, embedding in enumerate(embeddings):
+      chunks[index].embedding = embedding
   while True:
     try:
       user_input = input("User :").strip()
@@ -22,7 +33,7 @@ def main()-> None:
 
 
     try:
-      response = chat_turn(user_input,messages)
+      response = chat_turn(user_input,messages,chunks)
     except Exception as err:
       print("Error",err)
       continue

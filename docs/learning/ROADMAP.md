@@ -35,7 +35,7 @@ Done = you can answer the Learn questions without looking anything up.
 - **Build:** Download a public repo, keep useful files, split into chunks with
   file path + line numbers.
 
-### [ ] Step 4 — Embeddings + similarity search
+### [X] Step 4 — Embeddings + similarity search
 
 - **Learn:** What is an embedding? What is cosine similarity? Why does
   "login" find "authentication" when keyword search wouldn't?

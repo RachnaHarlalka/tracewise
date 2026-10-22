@@ -1,4 +1,21 @@
-MODEL_NAME = "llama3.2:3b"
+CHAT_MODEL_NAME = "llama3.2:3b"
+EMBEDDING_MODEL_NAME = "nomic-embed-text"
+
+SYSTEM_PROMPT_TEXT = """You are an assistant that answers questions about a code repository.
+You will receive excerpts from the repository (the context) and a question.
+
+Rules:
+- Answer ONLY using the context. If the answer is not in the context, reply exactly: "I don't know based on the provided files."
+- Answer in your own words in 1 to 3 short sentences. Do not copy or quote code or text.
+- After the answer, add one line: "Sources: " followed by the file paths and line ranges you used, like README.md:1-10. Only cite files that appear in the context.
+
+Example:
+Question: How does the app send emails?
+Answer: It sends emails through the SMTP client in the mailer module.
+Sources: src/mailer.py:12-30
+
+"""
+
 
 SKIP_DIRS = {
     ".git", "node_modules", "dist", "build", "out", ".next", ".nuxt",
