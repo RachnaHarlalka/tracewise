@@ -21,7 +21,13 @@ def main()-> None:
   for index, embedding in enumerate(embeddings):
       chunks[index].embedding = embedding
 
-      
+  messages=[
+        {
+          'role':"system",
+          'content':SYSTEM_PROMPT_TEXT
+        }
+      ]
+
   while True:
     try:
       user_input = input("User :").strip()
@@ -34,12 +40,7 @@ def main()-> None:
     if not user_input:
       continue
 
-    messages=[
-      {
-        'role':"system",
-        'content':SYSTEM_PROMPT_TEXT
-      }
-    ]
+
 
     try:
       response = chat_turn(user_input,messages,chunks)
