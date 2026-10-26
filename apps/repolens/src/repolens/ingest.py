@@ -1,5 +1,6 @@
 
 import io
+import re
 from pathlib import PurePosixPath
 import zipfile
 
@@ -23,6 +24,28 @@ def should_keep(path:str)->bool:
   return path.endswith(CONSIDERED_FILE_FORMATS)
 
 
+def to_zip_url(url: str, branch: str | None = None) -> str:
+  """Accept a repo URL or a zip URL; return the zip URL of the given branch (default branch if none)."""
+  url = url.strip()
+  if "/archive/" in url:
+    return url
+  m = re.match(r"https?://github\.com/([^/\s]+)/([^/\s#?]+)", url)
+  if not m:
+    raise ValueError("Not a GitHub repo URL")
+  owner, repo = m.group(1), m.group(2).removesuffix(".git")
+  branch = (branch or "").strip()
+  if branch:
+    return f"https://github.com/{owner}/{repo}/archive/refs/heads/{branch}.zip"
+  branch = "main"
+  try:
+    r = httpx.get(f"https://api.github.com/repos/{owner}/{repo}", timeout=10)
+    if r.status_code == 200:
+      branch = r.json().get("default_branch", "main")
+  except httpx.HTTPError:
+    pass  # fall back to main
+  return f"https://github.com/{owner}/{repo}/archive/refs/heads/{branch}.zip"
+
+
 def ingest(url) -> list[Chunk]:
   response = httpx.get(url, follow_redirects=True)
   all_chunks : list = []
@@ -36,7 +59,6 @@ def ingest(url) -> list[Chunk]:
       lines = file_content.splitlines()
       all_chunks.extend(chunk_file(path=item,lines=lines,chunk_size=CHUNK_SIZE,overlap=CHUNK_OVERLAP))
   return all_chunks
-
 
 
 

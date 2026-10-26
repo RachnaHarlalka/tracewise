@@ -1,24 +1,27 @@
 from repolens.chat import chat_turn
 from repolens.config import SYSTEM_PROMPT_TEXT
 from repolens.embeddings import embed_data
-from repolens.ingest import ingest
+from repolens.ingest import ingest, to_zip_url
 
 
 def main()-> None:
-  messages=[
-    {
-      'role':"system",
-      'content':SYSTEM_PROMPT_TEXT
-    }
-  ]
+  repo_url = input("Give the GitHub repo URL you want answers about: ")
   try:
-    repor_url = input("give the repo url feom which you want an ans : ")
-  except Exception as err:
-    print ("Not a valid url")
-  chunks = ingest(repor_url)
+    zip_url = to_zip_url(repo_url)
+  except ValueError as err:
+    print(err)
+    return
+
+  chunks = ingest(zip_url)
+  if not chunks:
+    print("Nothing downloaded. Is the repo public?")
+    return
   embeddings = embed_data([chunk.content for chunk in chunks])
+
   for index, embedding in enumerate(embeddings):
       chunks[index].embedding = embedding
+
+      
   while True:
     try:
       user_input = input("User :").strip()
@@ -31,6 +34,12 @@ def main()-> None:
     if not user_input:
       continue
 
+    messages=[
+      {
+        'role':"system",
+        'content':SYSTEM_PROMPT_TEXT
+      }
+    ]
 
     try:
       response = chat_turn(user_input,messages,chunks)
