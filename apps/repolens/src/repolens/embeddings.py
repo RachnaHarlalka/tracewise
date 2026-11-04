@@ -1,12 +1,16 @@
 import math
-from repolens.config import EMBEDDING_MODEL_NAME
+from repolens.config import BATCH, EMBEDDING_MODEL_NAME
 from repolens.llm import call_embedding_model
 
 
 
-def embed_data(data):
-  response = call_embedding_model(model_name=EMBEDDING_MODEL_NAME,texts=data)
-  vectors = response.embeddings
+def embed_data(data)->list:
+  vectors : list = []
+  for i in range(0, len(data), BATCH):
+      batch = data[ i: i+BATCH]
+      # print("batch",batch)
+      response = call_embedding_model(model_name=EMBEDDING_MODEL_NAME,texts=batch)
+      vectors.extend(response.embeddings)
   return vectors
 
 

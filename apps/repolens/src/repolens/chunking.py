@@ -11,18 +11,42 @@ class Chunk:
 
 
 def chunk_file(lines:list[str],path:str, chunk_size: int=4, overlap:int = 2)-> list[Chunk]:
+
   chunks : list[Chunk] = []
 
-  for start in range(0, len(lines), chunk_size-overlap):
-    chunk = lines[start:start+chunk_size]
-    text_content = "\n".join(chunk)
-    end_line= start + len(chunk)
-    chunk = Chunk(content=text_content,start_line=start+1, end_line=end_line,path=path)
-    chunks.append(chunk)
-    if start+chunk_size >= len(lines):
-      break
-
+  if path.endswith(".md"):
+    start = 0
+    in_fence = False
+    for i,line in enumerate(lines):
+      if line.startswith("```"):
+        in_fence = not in_fence
+      if line.startswith("#") and not in_fence and i>start:
+        chunk = lines[start:i]
+        text_content = "\n".join(chunk)
+        chunk = Chunk(content=text_content, start_line=start+1, end_line=start+len(chunk),path=path)
+        start = i
+        chunks.append(chunk)
+    if lines:
+      chunk = lines[start:]
+      text_content = "\n".join(chunk)
+      chunk = Chunk(content=text_content, start_line=start+1, end_line=start+len(chunk),path=path)
+      chunks.append(chunk)
+  else:
+    start = 0
+    for start in range(0, len(lines), chunk_size-overlap):
+        chunk = lines[start:start+chunk_size]
+        text_content = "\n".join(chunk)
+        end_line= start + len(chunk)
+        chunk = Chunk(content=text_content,start_line=start+1, end_line=end_line,path=path)
+        chunks.append(chunk)
+        if start+chunk_size >= len(lines):
+          break
   return chunks
+
+
+
+
+
 
 
 # if __name__ == "__main__":

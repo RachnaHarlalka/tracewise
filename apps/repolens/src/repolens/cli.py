@@ -16,7 +16,7 @@ def main()-> None:
   if not chunks:
     print("Nothing downloaded. Is the repo public?")
     return
-  embeddings = embed_data([chunk.content for chunk in chunks])
+  embeddings = embed_data(["search_document: "+chunk.content for chunk in chunks])
 
   for index, embedding in enumerate(embeddings):
       chunks[index].embedding = embedding

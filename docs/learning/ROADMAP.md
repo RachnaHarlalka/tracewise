@@ -42,7 +42,7 @@ Done = you can answer the Learn questions without looking anything up.
 - **Try:** Embed 5 sentences, print the similarity of every pair.
 - **Build:** Embed all chunks, return the top-k most similar to a question.
 
-### [ ] Step 5 — RAG answers with citations
+### [X] Step 5 — RAG answers with citations
 
 - **Learn:** How do retrieved chunks go into the prompt? What is hallucination,
   and how do instructions + citations reduce it? What happens if retrieval is wrong?

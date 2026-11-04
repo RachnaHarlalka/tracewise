@@ -30,3 +30,4 @@ node_modules/
 # Local data and logs
 data/
 *.log
+logs/

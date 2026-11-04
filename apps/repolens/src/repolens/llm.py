@@ -3,7 +3,8 @@ from ollama import chat, embed
 
 def call_llm(model_name:str,messages:list[dict])->ChatResponse:
   return chat(model_name,messages,options={
-    'temperature':0
+    'temperature':0,
+    'num_ctx':8192
   })
 
 def call_embedding_model(model_name:str,texts:str|list[str]):

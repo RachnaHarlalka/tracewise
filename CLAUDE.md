@@ -9,6 +9,7 @@ The developer is an experienced full-stack engineer but NEW to LLM apps and AI o
 - @docs/architecture/PROJECT_OVERVIEW.md — the problem, concepts, architecture, RepoLens, constraints
 - @docs/learning/WORKFLOW.md — learning loop, what I write vs what you may generate, skills
 - @docs/learning/ROADMAP.md — phases, steps, and Learn/Try/Build for each
+- @docs/learning/NOVEMBER_PLAN.md — this month's committed deadlines and checkpoints
 - docs/decisions/ — why key choices were made (read when a choice is questioned)
 
 ## How to work with me (most important section)
@@ -26,7 +27,7 @@ The developer is an experienced full-stack engineer but NEW to LLM apps and AI o
 
 ## Current status
 Phase: 1 — RepoLens test app
-Step: 5 — RAG answers with citations
+Step: 6 — Tool calling
 (Update this section at the end of every step.)
 
 ## Stack (free only — no paid services, no AWS)

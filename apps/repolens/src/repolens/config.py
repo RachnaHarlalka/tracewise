@@ -1,4 +1,5 @@
-CHAT_MODEL_NAME = "llama3.2:3b"
+# CHAT_MODEL_NAME = "llama3.2:3b"
+CHAT_MODEL_NAME = "llama3.1:8b"
 EMBEDDING_MODEL_NAME = "nomic-embed-text"
 
 SYSTEM_PROMPT_TEXT = """You are an assistant that answers questions about a code repository.
@@ -36,6 +37,7 @@ SKIP_SUFFIXES = (".min.js", ".min.css", ".map", ".lock", ".svg", ".png", ".jpg",
 
 CONSIDERED_FILE_FORMATS = (".md",".py",".ts",".js",".json")
 
-CHUNK_SIZE = 10
+CHUNK_SIZE = 30
 CHUNK_OVERLAP = 2
+BATCH = 200
 TopK = 5

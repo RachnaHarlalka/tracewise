@@ -29,11 +29,13 @@ def to_zip_url(url: str, branch: str | None = None) -> str:
   url = url.strip()
   if "/archive/" in url:
     return url
-  m = re.match(r"https?://github\.com/([^/\s]+)/([^/\s#?]+)", url)
+  m = re.match(r"https?://github\.com/([^/\s]+)/([^/\s#?]+)(?:/tree/([^?#\s]+))?", url)
+
   if not m:
     raise ValueError("Not a GitHub repo URL")
-  owner, repo = m.group(1), m.group(2).removesuffix(".git")
-  branch = (branch or "").strip()
+  owner, repo = m.group(1), m.group(2).removesuffix(".git"),
+  branch = (branch or m.group(3) or "").strip()
+  print("branch", branch)
   if branch:
     return f"https://github.com/{owner}/{repo}/archive/refs/heads/{branch}.zip"
   branch = "main"
