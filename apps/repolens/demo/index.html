@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RepoLens</title>
+<style>
+  :root {
+    --bg: #07080b; --panel: #0d0f14; --panel2: #12151c; --line: #1e222c; --line2: #2a2f3b;
+    --text: #e9ebf1; --muted: #838b9b; --dim: #5b6272;
+    --accent: #2f6bff; --accent-soft: rgba(47,107,255,.14); --accent-text: #7ea3ff;
+    --ok: #3ddc97; --ok-soft: rgba(61,220,151,.12); --bad: #ff7b72; --warn: #f5b84a;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; color: var(--text); font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 15% -10%, #1a2a5e55, transparent 60%),
+                radial-gradient(900px 500px at 100% 110%, #5b2a1a40, transparent 60%), var(--bg);
+    -webkit-font-smoothing: antialiased; }
+  .app { display: grid; grid-template-columns: 300px minmax(0, 1fr) 420px; height: 100vh; max-width: 1760px; margin: 0 auto;
+    border-inline: 1px solid var(--line); background: var(--bg); }
+  .col { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line2) transparent; }
+  .side { background: var(--panel); border-right: 1px solid var(--line); padding: 22px 18px; display: flex; flex-direction: column; gap: 22px; }
+  .mid { padding: 26px 30px; }
+  .chatcol { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #3d78ff, #6a3dff); display: grid; place-items: center;
+    font-weight: 700; font-size: 14px; box-shadow: 0 4px 18px rgba(47,107,255,.45); }
+  .brand b { font-size: 16px; letter-spacing: -.01em; }
+  .brand small { display: block; color: var(--muted); font-size: 11.5px; margin-top: -2px; }
+
+  .eyebrow { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; font-weight: 600; }
+  input[type=text], textarea, select { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line2);
+    border-radius: 10px; padding: 10px 12px; outline: none; transition: border-color .15s, box-shadow .15s; width: 100%; }
+  input[type=text]:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  input[type=text] { font-family: var(--mono); font-size: 12.5px; }
+  button { font: inherit; cursor: pointer; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 600;
+    box-shadow: 0 6px 20px rgba(47,107,255,.35); transition: transform .1s, filter .15s; }
+  .btn:hover:not(:disabled) { filter: brightness(1.12); }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .btn:disabled { opacity: .4; cursor: default; box-shadow: none; }
+  .btn.full { width: 100%; margin-top: 10px; }
+  .note { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; min-height: 18px; }
+  .note.err { color: var(--bad); }
+
+  /* stepper (index lane) in sidebar */
+  #laneIndex { display: flex; flex-direction: column; gap: 2px; position: relative; }
+  #laneIndex .stage { width: 100%; justify-content: flex-start; }
+  /* chips (ask lane) */
+  #laneAsk { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #laneAsk .stage:not(:last-child)::after { content: "\203A"; color: var(--dim); margin-left: 8px; }
+  .stage { background: transparent; border: 1px solid transparent; padding: 7px 10px; border-radius: 9px; color: var(--muted);
+    display: inline-flex; gap: 9px; align-items: center; transition: all .2s; }
+  .stage::before { content: ""; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; flex: none; transition: all .2s; }
+  .stage:hover { background: var(--panel2); color: var(--text); }
+  .stage.done { color: var(--text); }
+  .stage.done::before { background: var(--ok); border-color: var(--ok); box-shadow: 0 0 10px var(--ok); }
+  .stage.active { color: var(--accent-text); }
+  .stage.active::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .stage.wait::before { animation: blink 1s ease-in-out infinite; }
+  .stage.selected { background: var(--accent-soft); border-color: rgba(47,107,255,.35); color: var(--text); }
+  .stage small { color: var(--muted); font-size: 11.5px; margin-left: auto; font-family: var(--mono); }
+  #laneAsk .stage small { margin-left: 0; }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  .opts { display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--muted); }
+  .opts label { display: flex; gap: 8px; align-items: center; cursor: pointer; justify-content: space-between; }
+  .dd { position: relative; margin-top: 8px; }
+  .dd-btn { width: 100%; display: flex; align-items: center; gap: 9px; text-align: left; color: var(--text); background: var(--panel2);
+    border: 1px solid var(--line2); border-radius: 10px; padding: 10px 12px; font-size: 13px; transition: border-color .15s, box-shadow .15s; }
+  .dd-btn:hover { border-color: #3a4151; }
+  .dd-btn:focus-visible, .dd-btn[aria-expanded=true] { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .dd-btn > svg:first-child { color: var(--muted); flex: none; }
+  .dd-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 12.5px; }
+  .chev { color: var(--muted); flex: none; transition: transform .15s; }
+  .dd-btn[aria-expanded=true] .chev { transform: rotate(180deg); }
+  .dd-menu { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 6px); background: #151922; border: 1px solid var(--line2);
+    border-radius: 12px; padding: 5px; max-height: 240px; overflow-y: auto; box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.02);
+    scrollbar-width: thin; scrollbar-color: var(--line2) transparent; animation: pop .12s ease; }
+  .dd-menu[hidden] { display: none; }
+  @keyframes pop { from { opacity: 0; transform: translateY(-4px); } }
+  .dd-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font: 12.5px var(--mono); color: #c3c8d4; }
+  .dd-item:hover, .dd-item.focus { background: var(--panel2); color: var(--text); }
+  .dd-item.sel { color: var(--text); }
+  .dd-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dd-item .tick { width: 14px; flex: none; color: var(--accent-text); }
+  .badge { font: 600 10px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--accent-text); background: var(--accent-soft);
+    border: 1px solid rgba(47,107,255,.3); padding: 1px 6px; border-radius: 999px; flex: none; }
+  .dd-empty { padding: 10px; color: var(--muted); font-size: 12.5px; }
+  .opts select { width: auto; padding: 5px 8px; border-radius: 8px; }
+  input[type=checkbox] { appearance: none; width: 34px; height: 20px; border-radius: 20px; background: var(--line2); position: relative; cursor: pointer; transition: background .2s; flex: none; }
+  input[type=checkbox]::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  input[type=checkbox]:checked { background: var(--accent); }
+  input[type=checkbox]:checked::after { transform: translateX(14px); }
+
+  /* mid pane */
+  .mid h2 { font-size: 20px; letter-spacing: -.015em; margin: 0 0 4px; }
+  .mid .sub { color: var(--muted); margin: 0 0 22px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 16px; }
+  #detail { padding: 22px 24px; min-height: 260px; }
+  #detail h3 { font-size: 16px; margin: 0 0 8px; letter-spacing: -.01em; }
+  #detail p { margin: 8px 0; color: #c3c8d4; }
+  .muted { color: var(--muted) !important; }
+  .meta { color: var(--muted); font-size: 12.5px; margin: 12px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .meta b { color: var(--text); font-weight: 600; font-family: var(--mono); font-size: 12px; background: var(--panel2); border: 1px solid var(--line);
+    padding: 2px 8px; border-radius: 999px; margin-left: 4px; }
+  pre { background: #080a0e; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; white-space: pre-wrap; word-break: break-word;
+    font: 12px/1.6 var(--mono); margin: 8px 0; max-height: 300px; overflow: auto; color: #b9c1d3; }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; font-family: var(--mono); }
+  .bar { grid-column: 1 / -1; height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #8a5bff); border-radius: 4px; }
+  details { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  details summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-family: var(--mono); }
+  details summary::-webkit-details-marker { display: none; }
+  .answer { white-space: pre-wrap; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* chat */
+  .chathead { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+  .chathead .logo { width: 38px; height: 38px; border-radius: 50%; }
+  .chathead b { display: block; font-size: 15px; }
+  .chathead span { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .chathead span::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  #chat { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: thin; scrollbar-color: var(--line2) transparent; }
+  .msg { display: flex; gap: 10px; align-items: flex-start; max-width: 100%; min-width: 0; animation: rise .25s ease; }
+  .msg.user { flex-direction: row-reverse; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 11px; font-weight: 700;
+    background: var(--accent-soft); color: var(--accent-text); border: 1px solid rgba(47,107,255,.3); }
+  .msg.user .avatar { background: var(--panel2); color: var(--muted); border-color: var(--line2); }
+  .bubble { background: var(--panel2); border: 1px solid var(--line); border-radius: 14px; border-top-left-radius: 4px; padding: 11px 14px; min-width: 0; max-width: calc(100% - 44px); overflow: hidden; overflow-wrap: anywhere; }
+  .msg.user .bubble { background: var(--accent); border-color: transparent; color: #fff; border-radius: 14px; border-top-right-radius: 4px; box-shadow: 0 6px 20px rgba(47,107,255,.3); }
+  .bubble h3 { font-size: 13px; margin: 0 0 6px; }
+  .cites { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .cite { font: 11.5px/1.45 var(--mono); padding: 4px 9px; border-radius: 8px; max-width: 100%; overflow-wrap: anywhere; word-break: break-all; }
+  .cite.ok { color: var(--ok); background: var(--ok-soft); }
+  .cite.bad { color: var(--bad); background: rgba(255,123,114,.12); }
+  .bubble .meta { margin: 8px 0 0; font-size: 11.5px; }
+  .bubble pre { max-width: 100%; }
+  .cmp-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); margin: 4px 0 6px; font-weight: 600; }
+  .cmp-label:not(:first-child) { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line2); }
+  .err-text { color: var(--bad); }
+  .typing { display: inline-flex; gap: 4px; padding: 4px 0; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce 1.1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%, 60%, 100% { transform: none; opacity: .4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+  .composer { padding: 14px 18px 12px; border-top: 1px solid var(--line); }
+  .examples { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+  .examples button { white-space: nowrap; background: var(--panel2); border: 1px solid var(--line2); color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 12px; transition: all .15s; }
+  .examples button:hover { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
+  .inputwrap { position: relative; }
+  textarea { resize: none; height: 56px; padding-right: 52px; }
+  #askBtn { position: absolute; right: 8px; bottom: 8px; width: 36px; height: 36px; padding: 0; border-radius: 9px; display: grid; place-items: center; }
+  .foot { text-align: center; font-size: 11px; color: var(--dim); margin: 8px 0 0; }
+  .foot.err { color: var(--bad); }
+
+  @media (max-width: 1180px) { .app { grid-template-columns: 260px minmax(0, 1fr); } .chatcol { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); height: 70vh; } .app { height: auto; } .col.side, .col.mid { overflow: visible; } }
+  @media (max-width: 760px) { .app { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } .mid { padding: 20px 16px; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="col side">
+    <div class="brand"><div class="logo">R</div><div><b>RepoLens</b><small>Chat with any GitHub repo</small></div></div>
+
+    <div>
+      <p class="eyebrow">Repository</p>
+      <input id="url" type="text" value="https://github.com/RachnaHarlalka/tracewise" aria-label="GitHub repo URL" spellcheck="false">
+      <div class="dd" id="branchDD">
+        <button type="button" id="branchBtn" class="dd-btn" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8.5v7M18 10.5c0 4-12 2-12 5"/></svg>
+          <span id="branchLabel" class="dd-label">Default branch</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div id="branchMenu" class="dd-menu" role="listbox" hidden></div>
+        <input type="hidden" id="branch" value="">
+      </div>
+      <p id="branchHint" class="note"></p>
+      <button id="indexBtn" class="btn full">Index repo</button>
+      <p id="indexStatus" class="note">Public repo.</p>
+    </div>
+
+    <div>
+      <p class="eyebrow">Indexing pipeline</p>
+      <div id="laneIndex"></div>
+    </div>
+
+    <div>
+      <p class="eyebrow">Settings</p>
+      <div class="opts">
+        <label>Compare without context <input id="cmp" type="checkbox"></label>
+        <label>Chunks retrieved <select id="k"><option>3</option><option selected>5</option><option>8</option></select></label>
+      </div>
+    </div>
+  </aside>
+
+  <main class="col mid">
+    <h2>How the answer was built</h2>
+    <p class="sub">Click any stage to inspect what happened there.</p>
+    <div class="card"><p class="eyebrow">Answer pipeline</p><div id="laneAsk"></div></div>
+    <div class="card" id="detail"><p class="muted">Index a repo, ask a question, then click any stage to see what happened there.</p></div>
+  </main>
+
+  <section class="col chatcol">
+    <div class="chathead"><div class="logo">R</div><div><b>RepoLens Assistant</b><span>RAG active</span></div></div>
+    <div id="chat"></div>
+    <div class="composer">
+      <div class="examples" id="examples"></div>
+      <div class="inputwrap">
+        <textarea id="q" placeholder="Ask a question about the repo..." aria-label="Question"></textarea>
+        <button id="askBtn" class="btn" disabled aria-label="Ask"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></button>
+      </div>
+      <p id="askStatus" class="foot">Local model. It can make mistakes, so check the sources.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const INDEX_NODES = [
+  { id: "download", label: "Download" },
+  { id: "filter", label: "Filter" },
+  { id: "chunk", label: "Chunk" },
+  { id: "embed", label: "Embed" },
+];
+const ASK_NODES = [
+  { id: "question", label: "Question" },
+  { id: "qembed", label: "Embed" },
+  { id: "search", label: "Search" },
+  { id: "prompt", label: "Prompt" },
+  { id: "generate", label: "Generate" },
+  { id: "answer", label: "Answer" },
+];
+const EXAMPLES = [
+  "What is Tracewise?",
+  "Which LLM model does RepoLens use for chat?",
+  "Why was RepoLens chosen as the test app?",
+  "How do I bake bread?",
+];
+
+let IDX = null, ASK = null, CMP = null;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const branchOf = (zip) => (zip.match(/\/archive\/refs\/heads\/(.+)\.zip/) || [])[1] || "unknown";
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function buildLane(el, nodes) {
+  el.innerHTML = "";
+  nodes.forEach((n) => {
+    const b = document.createElement("button");
+    b.className = "stage";
+    b.id = "node-" + n.id;
+    b.innerHTML = `${esc(n.label)} <small id="sub-${n.id}"></small>`;
+    b.onclick = () => select(n.id);
+    el.appendChild(b);
+  });
+}
+function setState(ids, state) {
+  ids.forEach((id) => {
+    const el = $("node-" + id);
+    el.classList.remove("done", "active", "wait");
+    if (state) el.classList.add(state);
+  });
+}
+const setSub = (id, text) => { $("sub-" + id).textContent = text; };
+const clearSubs = (nodes) => nodes.forEach((n) => setSub(n.id, ""));
+async function reveal(nodes, pause = 300) {
+  for (const n of nodes) { setState([n.id], "active"); await sleep(pause); setState([n.id], "done"); }
+}
+function select(id) {
+  document.querySelectorAll(".stage").forEach((n) => n.classList.remove("selected"));
+  $("node-" + id).classList.add("selected");
+  renderDetail(id);
+}
+
+const meta = (pairs) => '<p class="meta">' + pairs.map(([k, v]) => `${esc(k)} <b>${esc(v)}</b>`).join(" &nbsp;&middot;&nbsp; ") + "</p>";
+
+function answerBlock(a, title) {
+  const cites = a.citations.length
+    ? a.citations.map((c) => `<span class="cite ${c.verified ? "ok" : "bad"}">${c.verified ? "&#10003;" : "&#10007;"} ${esc(c.cite)}</span>`).join("")
+    : '<span class="muted">No sources cited.</span>';
+  return `<div>${title ? `<h3>${esc(title)}</h3>` : ""}<div class="answer">${esc(a.answer)}</div>
+    <p class="cites">${cites}</p>${meta([["tokens in", a.tokens.in], ["out", a.tokens.out], ["time", a.seconds.generate + "s"]])}</div>`;
+}
+
+function renderDetail(id) {
+  const d = $("detail");
+  if (["download", "filter", "chunk", "embed"].includes(id)) {
+    if (!IDX) { d.innerHTML = '<p class="muted">Index a repo first.</p>'; return; }
+    if (id === "download") {
+      d.innerHTML = `<h3>Download</h3><p>The repo is fetched as a zip from GitHub. The URL redirects, so the client must follow redirects.</p>
+        <pre>${esc(IDX.zip_url)}</pre>${meta([["branch", branchOf(IDX.zip_url)], ["download + filter + chunk", IDX.seconds.ingest + "s"]])}`;
+    } else if (id === "filter") {
+      const max = Math.max(...IDX.files.map((f) => f.chunks));
+      d.innerHTML = `<h3>Filter</h3><p>Only useful text files are kept. No lock files, minified code or dependency folders.</p>${meta([["files kept", IDX.files.length]])}` +
+        IDX.files.map((f) => `<div class="row"><span>${esc(f.path)}</span><span class="muted">${f.chunks}</span>
+          <span class="bar"><i style="width:${(f.chunks / max) * 100}%"></i></span></div>`).join("");
+    } else if (id === "chunk") {
+      d.innerHTML = `<h3>Chunk</h3><p>Files are cut into groups of lines. Neighbouring chunks share a few lines, so an idea cut at the edge still appears whole in one of them. Each chunk keeps its file and line numbers for citations.</p>
+        ${meta([["lines per chunk", IDX.chunk_size], ["overlap", IDX.chunk_overlap], ["chunks", IDX.chunk_count]])}` +
+        IDX.samples.map((s) => `<p class="muted">${esc(s.path)}:${s.start}-${s.end}</p><pre>${esc(s.content)}</pre>`).join("");
+    } else {
+      d.innerHTML = `<h3>Embed</h3><p>Each chunk becomes a vector, a list of numbers that captures its meaning. Chunks that mean similar things get nearby vectors. Done once per repo.</p>
+        ${meta([["model", IDX.embedding_model], ["dimensions", IDX.dims], ["time", IDX.seconds.embed + "s"]])}
+        <p class="muted">First 8 numbers of the first chunk</p><pre>[${IDX.samples[0].vector.join(", ")}, ...]</pre>`;
+    }
+    return;
+  }
+  if (!ASK) { d.innerHTML = '<p class="muted">Ask a question first.</p>'; return; }
+  if (id === "question") {
+    d.innerHTML = `<h3>Question</h3><pre>${esc(ASK.question)}</pre>`;
+  } else if (id === "qembed") {
+    d.innerHTML = `<h3>Embed the question</h3><p>The question goes through the same embedding model as the chunks, so the two can be compared.</p>
+      ${meta([["dimensions", ASK.vector.dims]])}<pre>[${ASK.vector.preview.join(", ")}, ...]</pre>`;
+  } else if (id === "search") {
+    d.innerHTML = `<h3>Search</h3><p>The question vector is compared with every chunk vector (cosine similarity). Higher means closer in meaning.</p>${meta([["time", ASK.seconds.retrieve + "s"]])}` +
+      ASK.results.map((r, i) => `<details ${i === 0 ? "open" : ""}><summary><span>${esc(r.path)}:${r.start}-${r.end}</span><span class="muted">${r.score}</span>
+        <span class="bar"><i style="width:${Math.max(0, r.score) * 100}%"></i></span></summary><pre>${esc(r.content)}</pre></details>`).join("");
+  } else if (id === "prompt") {
+    d.innerHTML = `<h3>Prompt</h3><p>Exactly what the model receives.</p><p class="muted">System</p><pre>${esc(ASK.system)}</pre><p class="muted">User</p><pre>${esc(ASK.prompt)}</pre>`;
+  } else if (id === "generate") {
+    d.innerHTML = `<h3>Generate</h3><p>The local model writes the answer from the prompt. More context means more input tokens, and more output tokens means more time.</p>
+      ${meta([["model", ASK.model], ["tokens in", ASK.tokens.in], ["out", ASK.tokens.out], ["time", ASK.seconds.generate + "s"]])}`;
+  } else if (id === "answer") {
+    d.innerHTML = CMP
+      ? `<div class="two">${answerBlock(CMP.with, "With context")}${answerBlock(CMP.without, "Without context")}</div>
+         <p class="muted">Without context the model answers from memory, so specifics about a private repo are guesses.</p>`
+      : answerBlock(ASK, "") + '<p class="muted">&#10003; means the source was among the chunks sent to the model. &#10007; means it was not, so it may be made up.</p>';
+  }
+}
+
+async function post(path, body) {
+  const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  return data;
+}
+
+let hintTimer, BR = { def: null, list: [], sel: "" };
+const TICK = '<svg class="tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const BLANK = '<span class="tick"></span>';
+function closeMenu() { $("branchMenu").hidden = true; $("branchBtn").setAttribute("aria-expanded", "false"); }
+function pickBranch(name) {
+  BR.sel = name;
+  $("branch").value = name === BR.def ? "" : name;  // empty = default branch
+  renderBranches();
+  closeMenu();
+}
+function renderBranches() {
+  const label = $("branchLabel"), menu = $("branchMenu");
+  if (!BR.list.length) { label.textContent = "Default branch"; menu.innerHTML = '<div class="dd-empty">Enter a repo URL to load branches</div>'; return; }
+  label.innerHTML = esc(BR.sel) + (BR.sel === BR.def ? ' <span class="badge">default</span>' : "");
+  menu.innerHTML = BR.list.map((b) => `<div class="dd-item${b === BR.sel ? " sel" : ""}" role="option" data-b="${esc(b)}" aria-selected="${b === BR.sel}">
+    ${b === BR.sel ? TICK : BLANK}<span class="name">${esc(b)}</span>${b === BR.def ? '<span class="badge">default</span>' : ""}</div>`).join("");
+}
+$("branchBtn").onclick = () => {
+  const open = $("branchMenu").hidden;
+  $("branchMenu").hidden = !open; $("branchBtn").setAttribute("aria-expanded", String(open));
+};
+$("branchMenu").addEventListener("click", (e) => { const it = e.target.closest(".dd-item"); if (it) pickBranch(it.dataset.b); });
+document.addEventListener("click", (e) => { if (!$("branchDD").contains(e.target)) closeMenu(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+
+async function loadBranches() {
+  const hint = $("branchHint"), url = $("url").value.trim(), prev = BR.sel;
+  BR = { def: null, list: [], sel: "" }; $("branch").value = ""; renderBranches(); closeMenu();
+  if (!/github\.com\/[^/\s]+\/[^/\s]+/.test(url)) { hint.textContent = ""; return; }
+  hint.textContent = "Looking up branches...";
+  try {
+    const res = await fetch("/api/branches?url=" + encodeURIComponent(url));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    BR = { def: data.default, list: data.branches, sel: data.default };
+    if (!BR.list.includes(BR.def)) BR.list.unshift(BR.def);
+    if (BR.list.includes(prev)) pickBranch(prev); else renderBranches();
+    hint.textContent = `${BR.list.length} branch${BR.list.length === 1 ? "" : "es"} found.`;
+  } catch (e) { hint.textContent = e.message; }
+}
+$("url").addEventListener("input", () => { clearTimeout(hintTimer); hintTimer = setTimeout(loadBranches, 600); });
+$("url").addEventListener("blur", loadBranches);
+
+async function indexRepo() {
+  const btn = $("indexBtn"), st = $("indexStatus");
+  btn.disabled = true; st.className = "note"; st.textContent = "Indexing: download, chunk, embed...";
+  setState(INDEX_NODES.map((n) => n.id), "wait");
+  try {
+    IDX = await post("/api/index", { url: $("url").value, branch: $("branch").value });
+    ASK = null; CMP = null;
+    setState(ASK_NODES.map((n) => n.id), null); clearSubs(ASK_NODES);
+    await reveal(INDEX_NODES);
+    setSub("filter", IDX.files.length + " files");
+    setSub("chunk", IDX.chunk_count);
+    setSub("embed", IDX.dims + "d");
+    const br = branchOf(IDX.zip_url), isDefault = !$("branch").value.trim();
+    st.textContent = `Branch: ${br}${isDefault ? " (default)" : ""} \u00b7 ${IDX.files.length} files, ${IDX.chunk_count} chunks, ${(IDX.seconds.ingest + IDX.seconds.embed).toFixed(1)}s.`;
+    $("askBtn").disabled = false;
+    addMsg("bot", `Indexed <b>${IDX.files.length} files</b> into <b>${IDX.chunk_count} chunks</b> from branch <b>${esc(br)}</b>${isDefault ? " (default)" : ""}. Ask me anything about this repo.`);
+    select("chunk");
+  } catch (e) {
+    setState(INDEX_NODES.map((n) => n.id), null);
+    st.className = "note err"; st.textContent = e.message;
+  } finally { btn.disabled = false; }
+}
+
+const runAsk = (question, useContext) => post("/api/ask", { question, k: Number($("k").value), use_context: useContext });
+
+function addMsg(role, html) {
+  const m = document.createElement("div");
+  m.className = "msg " + role;
+  m.innerHTML = `<div class="avatar">${role === "bot" ? "R" : "You"}</div><div class="bubble">${html}</div>`;
+  $("chat").appendChild(m);
+  $("chat").scrollTop = $("chat").scrollHeight;
+  return m;
+}
+const typing = '<span class="typing"><i></i><i></i><i></i></span>';
+const setBubble = (m, html) => { m.querySelector(".bubble").innerHTML = html; $("chat").scrollTop = $("chat").scrollHeight; };
+
+async function ask() {
+  const st = $("askStatus");
+  if (!$("q").value.trim()) { st.className = "foot err"; st.textContent = "Type a question first."; return; }
+  const compare = $("cmp").checked;
+  const question = $("q").value.trim();
+  $("q").value = "";
+  addMsg("user", esc(question));
+  const pending = addMsg("bot", typing);
+  $("askBtn").disabled = true; st.className = "foot"; st.textContent = compare ? "Running with and without context..." : "Thinking...";
+  setState(ASK_NODES.map((n) => n.id), "wait"); clearSubs(ASK_NODES);
+  try {
+    if (compare) { const w = await runAsk(question, true); const wo = await runAsk(question, false); ASK = w; CMP = { with: w, without: wo }; }
+    else { ASK = await runAsk(question, true); CMP = null; }
+    setBubble(pending, CMP
+      ? `<div class="cmp-label">With context</div>${answerBlock(CMP.with, "")}<div class="cmp-label">Without context</div>${answerBlock(CMP.without, "")}`
+      : answerBlock(ASK, ""));
+    await reveal(ASK_NODES);
+    setSub("search", ASK.results.length + " chunks");
+    setSub("generate", ASK.seconds.generate + "s");
+    st.textContent = `${ASK.tokens.in} tokens in, ${ASK.tokens.out} out.`;
+    select("answer");
+  } catch (e) {
+    setState(ASK_NODES.map((n) => n.id), null);
+    setBubble(pending, `<span class="err-text">${esc(e.message)}</span>`);
+    st.className = "foot err"; st.textContent = e.message;
+  } finally { $("askBtn").disabled = false; }
+}
+
+loadBranches();
+buildLane($("laneIndex"), INDEX_NODES);
+buildLane($("laneAsk"), ASK_NODES);
+EXAMPLES.forEach((t) => {
+  const b = document.createElement("button");
+  b.textContent = t; b.onclick = () => { $("q").value = t; $("q").focus(); };
+  $("examples").appendChild(b);
+});
+addMsg("bot", "Hi! Index a GitHub repo on the left, then ask me anything about it. I answer only from the repo's files and cite my sources.");
+$("indexBtn").onclick = indexRepo;
+$("askBtn").onclick = ask;
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !$("askBtn").disabled) { e.preventDefault(); ask(); } });
+$("url").addEventListener("keydown", (e) => { if (e.key === "Enter") indexRepo(); });
+</script>
+</body>
+</html>
