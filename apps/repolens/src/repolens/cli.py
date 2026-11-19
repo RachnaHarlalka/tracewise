@@ -1,18 +1,19 @@
 from repolens.chat import chat_turn
 from repolens.config import SYSTEM_PROMPT_TEXT
 from repolens.embeddings import embed_data
-from repolens.ingest import ingest, to_zip_url
+from repolens.ingest import ingest, parse_repo_url, to_zip_url
 
 
 def main()-> None:
   repo_url = input("Give the GitHub repo URL you want answers about: ")
   try:
+    owner, repo, branch = parse_repo_url(repo_url)
     zip_url = to_zip_url(repo_url)
   except ValueError as err:
     print(err)
     return
 
-  chunks = ingest(zip_url)
+  chunks,files = ingest(zip_url)
   if not chunks:
     print("Nothing downloaded. Is the repo public?")
     return
@@ -41,9 +42,8 @@ def main()-> None:
       continue
 
 
-
     try:
-      response = chat_turn(user_input,messages,chunks)
+      response = chat_turn(user_input,messages,chunks,owner,repo,files)
     except Exception as err:
       print("Error",err)
       continue

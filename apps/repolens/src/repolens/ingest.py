@@ -23,19 +23,21 @@ def should_keep(path:str)->bool:
     return False
   return path.endswith(CONSIDERED_FILE_FORMATS)
 
+def parse_repo_url(url:str):
+  url = url.strip()
+  m = re.match(r"https?://github\.com/([^/\s]+)/([^/\s#?]+)(?:/tree/([^?#\s]+))?", url)
+  if not m:
+      raise ValueError("Not a GitHub repo URL")
+  owner, repo = m.group(1), m.group(2).removesuffix(".git")
+  branch = m.group(3).strip() if m.group(3) is not None else None
+  return owner,repo,branch
 
 def to_zip_url(url: str, branch: str | None = None) -> str:
   """Accept a repo URL or a zip URL; return the zip URL of the given branch (default branch if none)."""
-  url = url.strip()
   if "/archive/" in url:
     return url
-  m = re.match(r"https?://github\.com/([^/\s]+)/([^/\s#?]+)(?:/tree/([^?#\s]+))?", url)
-
-  if not m:
-    raise ValueError("Not a GitHub repo URL")
-  owner, repo = m.group(1), m.group(2).removesuffix(".git"),
-  branch = (branch or m.group(3) or "").strip()
-  print("branch", branch)
+  owner, repo, url_branch = parse_repo_url(url)
+  branch = (branch or url_branch or "").strip()
   if branch:
     return f"https://github.com/{owner}/{repo}/archive/refs/heads/{branch}.zip"
   branch = "main"
@@ -48,24 +50,26 @@ def to_zip_url(url: str, branch: str | None = None) -> str:
   return f"https://github.com/{owner}/{repo}/archive/refs/heads/{branch}.zip"
 
 
-def ingest(url) -> list[Chunk]:
+def ingest(url) -> tuple[list[Chunk], dict]:
   response = httpx.get(url, follow_redirects=True)
   all_chunks : list = []
+  full_files : dict = {}
   if(response.status_code != 200):
     print("Error in download")
-    return []
+    return [], {}
   zip_file = zipfile.ZipFile(io.BytesIO(response.content))
   for item in zip_file.namelist():
     if should_keep(item):
       file_content = zip_file.read(item).decode("utf-8")
       lines = file_content.splitlines()
+      full_files[item] = file_content
       all_chunks.extend(chunk_file(path=item,lines=lines,chunk_size=CHUNK_SIZE,overlap=CHUNK_OVERLAP))
-  return all_chunks
+  return all_chunks, full_files
 
 
 
 if __name__ == "__main__":
-  chunks = ingest(zip_url)
+  chunks, files = ingest(zip_url)
   embeddings = embed_data([chunk.content for chunk in chunks])
   for index, embedding in enumerate(embeddings):
     chunks[index].embedding = embedding

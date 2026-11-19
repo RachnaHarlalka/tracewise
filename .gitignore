@@ -31,3 +31,6 @@ node_modules/
 data/
 *.log
 logs/
+
+# RepoLens per-question traces (stand-in until Tracewise exists)
+apps/repolens/traces/
