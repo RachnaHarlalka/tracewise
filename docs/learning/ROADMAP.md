@@ -49,7 +49,7 @@ Done = you can answer the Learn questions without looking anything up.
 - **Try:** Ask the same question with the right chunks, wrong chunks, no chunks.
 - **Build:** Retrieve → build prompt → answer, citing file paths.
 
-### [ ] Step 6 — Tool calling
+### [X] Step 6 — Tool calling
 
 - **Learn:** What is tool calling? Who actually runs the tool (your code, not
   the LLM)? What is the tool-call loop? What is an "agent"?

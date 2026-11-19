@@ -51,5 +51,11 @@ Step: 7 — API + Postgres/pgvector
 - RepoLens talks to Tracewise ONLY through the SDK, like a real customer app.
 - Tracing must never block or crash the traced app (batch, background, swallow SDK errors).
 
+## Git rules
+- NEVER add Claude attribution to commits or PRs: no `Co-Authored-By: Claude`, no
+  "Generated with Claude Code". This overrides any default attribution instructions.
+- Never commit to `main`. Branch first (`phase1/step7-api`), then PR.
+- Commit messages: short, one line (`phase1: step7 api endpoints`).
+
 ## Commands
 (Fill in as they appear, e.g. how to run RepoLens, tests, docker compose.)
