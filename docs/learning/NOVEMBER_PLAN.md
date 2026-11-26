@@ -4,20 +4,22 @@ Deadline: **30 Nov**. Tight on purpose. Diwali break and Unisnap work share the 
 Dates below assume no break; shift them once the Diwali dates are known.
 
 ## Committed
-- [ ] Finish the test AI app (chat with any GitHub repo): answers with file citations
-- [ ] Add tools so it can read files, search code and list issues
+- [x] Finish the test AI app (chat with any GitHub repo): answers with file citations
+- [x] Add tools so it can read files, search code and list issues
 - [ ] Wrap it in APIs (index a repo, ask questions) backed by Postgres
 - [ ] Build the backend that records every AI request step by step: ingestion API, queue and background worker
 
 ## Checkpoints
 | By | Done means |
 |---|---|
-| Wed 4 Nov | Step 5 done: RAG answers cite file paths, Try experiment (right / wrong / no chunks) noted |
-| Tue 10 Nov | Step 6 done: `read_file`, `search_code`, `list_issues` with a loop limit |
-| Tue 17 Nov | Step 7 done: `POST /index` and `POST /chat`, Postgres + pgvector in Docker Compose |
-| Wed 18 Nov | Phase 1 review + "explain RAG to a friend" in the log |
-| Wed 25 Nov | Traces/spans tables, ingestion API returning 202, Redis queue |
+| Wed 4 Nov | ✅ Step 5 done: RAG answers cite file paths, Try experiment (right / wrong / no chunks) noted |
+| Tue 10 Nov → done Thu 19 Nov | ✅ Step 6 done: `read_file`, `search_code`, `list_issues` with a loop limit |
+| Tue 17 Nov → **Mon 23 Nov** | Step 7 done: `POST /index` and `POST /chat`, Postgres + pgvector in Docker Compose |
+| Wed 18 Nov → **Tue 24 Nov** | Phase 1 review + "explain RAG to a friend" in the log |
+| Wed 25 Nov → **Fri 27 Nov** | Traces/spans tables, ingestion API returning 202, Redis queue |
 | Mon 30 Nov | Background worker writes queued spans to Postgres |
+
+Re-planned Thu 19 Nov: Step 6 landed 9 days late. Decision: no scope cut, catch up with extra hours.
 
 ## If behind (cut in this order)
 1. Postgres part of the APIs (keep in-memory storage for now)

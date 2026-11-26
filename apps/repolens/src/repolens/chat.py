@@ -41,9 +41,8 @@ def build_sources(results:list[tuple[float, Chunk]],rounds:list,files:dict)->lis
   return list(dict.fromkeys(p for p in used if p))  # de-duplicate, keep order
 
 
-def chat_turn(user_input:str,messages:list,chunks:list[Chunk],owner:str,repo:str,files:dict):
+def chat_turn(user_input:str,messages:list,results:list[tuple[float,Chunk]],owner:str,repo:str,files:dict):
   started = time.perf_counter()
-  results = search(user_input,chunks,TopK)
   prompt = build_prompt(user_input,results)
   local=[*messages,{"role":"user","content":prompt}]
   ctx = {"files": files, "owner": owner, "repo": repo}

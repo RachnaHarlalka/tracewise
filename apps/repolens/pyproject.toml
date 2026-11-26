@@ -7,7 +7,13 @@ name = "repolens"
 version = "0.1.0"
 description = "Chat with any public GitHub repo, running locally on Ollama"
 requires-python = ">=3.10"
-dependencies = ["ollama"]
+dependencies = [
+    "fastapi>=0.162.5",
+    "ollama",
+    "pgvector>=0.5.1",
+    "psycopg[binary]>=3.3.9",
+    "uvicorn>=0.54.0",
+]
 
 [project.optional-dependencies]
 demo = ["fastapi", "uvicorn"]
